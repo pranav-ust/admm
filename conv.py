@@ -1,11 +1,15 @@
 import numpy as np
 from scipy import signal
+from sklearn.datasets import load_digits
 
-a = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
+digits = load_digits()
+
+
+a = digits.data[0].reshape((8,8))
 k = np.array([[1,2],[3,4]])
 
-x = np.array([[a[0,0], a[0,1], a[1,0], a[1,1]], [a[0,1], a[0,2], a[1,1], a[1,2]], [a[1,0], a[1,1], a[2,0], a[2,1]], [a[1,1], a[1,2], a[2,1], a[2,2]]])
-x_dash = np.linalg.pinv(x)
+#x = np.array([[a[0,0], a[0,1], a[1,0], a[1,1]], [a[0,1], a[0,2], a[1,1], a[1,2]], [a[1,0], a[1,1], a[2,0], a[2,1]], [a[1,1], a[1,2], a[2,1], a[2,2]]])
+
 # print(x_dash)
 
 y = signal.convolve2d(a, np.rot90(k, 2), 'valid')
@@ -14,7 +18,6 @@ def convert_conv(im, k):
 	'''x, is the input image, k is the kernel size'''
 	y, x = im.shape
 	toeplitz = np.zeros(((y - k + 1) * (y - k + 1), k * k))
-	print(toeplitz.shape)
 	y_ = y - k + 1
 	x_ = x - k + 1
 	count = 0
@@ -25,4 +28,4 @@ def convert_conv(im, k):
 	return toeplitz
 
 p = convert_conv(a, 2)
-print(np.dot(np.linalg.pinv(p), y.reshape((9)) ))
+print(np.dot(np.linalg.pinv(p), y.reshape((p.shape[0])) ))
