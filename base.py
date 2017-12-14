@@ -13,7 +13,7 @@ from numpy import vectorize
 
 train_data_x, train_data_y,test_data_x, test_data_y = generate_toy_data()
 data_num = train_data_y.size
-
+print(train_data_x)
 a_0 = train_data_x
 a_0_pinv = np.linalg.pinv(a_0)
 W_1 = np.zeros((layer_1_units,feat_num))
