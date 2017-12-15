@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2015/dev/Debian) (preloaded format=pdflatex 2015.11.9)  15 DEC 2017 22:24
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2015/dev/Debian) (preloaded format=pdflatex 2015.11.9)  15 DEC 2017 22:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -216,19 +216,25 @@ e
 ))
 [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./report.bbl
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] (./report.bbl
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 10.
 
-LaTeX Warning: Empty `thebibliography' environment on input line 3.
-
-) [2] [3] (./report.aux) ) 
+(/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <12> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 10.
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 10.
+ [3]) [4] (./report.aux) ) 
 Here is how much of TeX's memory you used:
- 2245 strings out of 493105
- 29972 string characters out of 6137072
- 94028 words of memory out of 5000000
- 5693 multiletter control sequences out of 15000+600000
- 9927 words of font info for 36 fonts, out of 8000000 for 9000
+ 2272 strings out of 493105
+ 30401 string characters out of 6137072
+ 94099 words of memory out of 5000000
+ 5716 multiletter control sequences out of 15000+600000
+ 10581 words of font info for 38 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 38i,16n,23p,247b,203s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 38i,16n,23p,247b,221s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/ams
 fonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
 cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cme
@@ -242,11 +248,12 @@ nts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type
 1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public
 /amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
 nts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
-cmsy8.pfb>
-Output written on report.pdf (3 pages, 146530 bytes).
+cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.
+pfb>
+Output written on report.pdf (4 pages, 165309 bytes).
 PDF statistics:
- 70 PDF objects out of 1000 (max. 8388607)
- 50 compressed objects within 1 object stream
+ 77 PDF objects out of 1000 (max. 8388607)
+ 55 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
