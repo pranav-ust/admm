@@ -48,6 +48,7 @@ def sigmoid(x):
     return 1.0 / (1.0 + math.exp(-x))
 
 
+
 def sigmoid_derivative(x):
     return x * (1 - x)
 
@@ -151,7 +152,7 @@ class BPNeuralNetwork:
         cases = X
 
         labels = y.reshape((-1,1))
-        self.setup(64, 1798, 1)
+        self.setup(64, 2, 1)
         self.train(cases, labels, 100, 0.05, 0.1)
         for case in cases:
             print("the forward prop is ",self.predict(case))
