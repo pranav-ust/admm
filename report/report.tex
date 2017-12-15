@@ -8,7 +8,7 @@
 
 \documentclass[12pt]{article}
 \usepackage{graphicx}
-\usepackage{booktabs}
+\usepackage{booktabs,amsmath}
 \usepackage{cite}
 \begin{document}
 \maketitle
@@ -32,7 +32,49 @@ The authors approached this problem by taking the pseudoinverse of $a_{l-1}$, wh
 In our opinion, taking pseudoinverse of a very tall matrix (in this case Toeplitz matrix of $a_{l-1}$) is an overkill and inaccurate.
 Hence, we approach this problem in a different manner.
 
-Firstly, 
+Firstly, we write the convolution-kernel operation in the form of equation matrix, let's say $a_{l-1}W_l  = z_l$.
+where $W_l$ is the unravelled kernel and $a_{l-1}$ is the Toeplitz matrix of the convolution layer.
+Here if $k = rank(W_l)$, then we only choose $k*k$ rows from the augmented $a_{l-1}W_l | z_l$ block and solve them using standard linear equation solvers.
+We found this to be a lot faster than taking traditional pseudoinverse.
+
+\section{Activation Update}
+
+Here we tweaked the original formulation which could work well for the ReLU function.
+\begin{align*}
+	a_l = \begin{cases}
+		(\beta_{l+1} W_{l+1}^TW_{l+1} + \gamma_l I)^{-1}(\beta_{l+1} W_{l+1}^Tz_{l+1} + \gamma_l z_l), & \text{for } z > 0 \\
+		(\beta_{l+1} W_{l+1}^TW_{l+1} + \gamma_l I)^{-1}(\beta_{l+1} W_{l+1}^Tz_{l+1}), & \text{otherwise }
+	\end{cases}
+\end{align*}
+
+\section{Output Update}
+
+For this step, we need to minimize, 
+\begin{align*}
+\min_z \gamma_l || a_l - h_l(z) ||^2 + \beta_l || z - W_la_{l-1} ||^2
+\end{align*}
+
+For the ReLU function, this function would be piecewise linear. Just putting the gradients to zero, we get,
+\begin{align*}
+	\frac{\partial}{\partial z} \left(  \gamma_l || a_l - h_l(z) ||^2 + \beta_l || z - W_la_{l-1} ||^2 \right) = 0
+\end{align*}
+
+which gives,
+
+\begin{align*}
+	z_l = \begin{cases}
+		\frac{\gamma_l a_l + \beta_l w_l a_{l-1}}{\gamma_l + \beta_l}, & \text{for } z > 0 \\
+		w_la_{l-1}, & \text{otherwise }
+	\end{cases}
+\end{align*}
+
+\section{Experimental Setup}
+We used MNIST dataset for classification. 
+However, due to time constraints we resorted to binary classification, rather than multiclass classification.
+Hence, we only classified even against odd numbers classification.
+Although we found that this was harder than numerical classification, since set of pixels were trying to generalize the image, making it even hard to classify.
+
+
 
 \bibliographystyle{apalike}
 \bibliography{ref}
