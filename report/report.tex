@@ -23,7 +23,11 @@ We used MNIST digit dataset (odd-even classification) and found that our method 
 
 \section{Introduction}
 ADMM (Alternating Direction Method of Multipliers) is the divide and conquer approach to solve a convex optimization problem \cite{taylor2016training}.
-For this project, we have implemented ADMM for Neural Networks.
+For this project, we have implemented ADMM for Neural Networks, with our added tweak on sampling full rank toeplitz matrix for convolutions.
+
+Notations for this report are: $W_l$ is the weight filter for layer $l$, $z_l$ is the outputs for each layer, $a_l$ are activations.
+Rest are the hyperparameters.
+We will focus on details of solving of sub-problems updates of the minimization problem, in the following section.
 
 \section{Weight Update}
 
