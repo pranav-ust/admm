@@ -9,27 +9,28 @@ layer_2_units = 5
 beta = 10
 gamma = 1
 grow_rate = 5
-warm_start = 1
-err_tol = 1e-8
+warm_start = 10
+err_tol = 0.0001
 
 from numpy import vectorize
 
-def convert_binary():
-	targets = digits.data[:1000]
-	for i in range(1000):
-		if targets[i] % 2 == 0:
+def convert_binary(m,n):
+	digit = load_digits()
+	targets = digit.target[m:n]
+	for i in range(n - m):
+		if (targets[i] % 2) == 0:
 			targets[i] = 1
 		else:
 			targets[i] = -1
 	return targets
 
-train_data_x = np.transpose(digits.data[1:4])
-train_data_y = np.array([-1, 1, -1])
-test_data_x = np.transpose(digits.data[:3])
-test_data_y = np.array([-1, 1, -1])
+train_data_x = np.transpose(digits.data[:1000])
+train_data_y = convert_binary(0,1000)
+test_data_x = np.transpose(digits.data[:1000])
+test_data_y = convert_binary(0, 1000)
 
 #train_data_x, train_data_y,test_data_x, test_data_y = generate_toy_data()
-print(train_data_y)
+print("Outputs are ", train_data_x)
 data_num = train_data_y.size
 print(train_data_x.shape)
 a_0 = train_data_x
@@ -174,10 +175,8 @@ def test():
 	print(layer_2_output)
 	print("layer 3 value: \n")
 	print(predict)
-
-
 	hit = np.equal(pre,test_data_y)
-	acc = np.sum(hit)*1.0/test_data_y.size
+	acc = np.sum(hit)/1000
 	print("test data predict accuracy: {}".format(acc))
 
 def train():
@@ -191,12 +190,12 @@ def train():
 	while 1:
 		loss = update(is_warm_start=False)
 		print("iteration {}, err :{}".format(i,loss))
-		if i%100 == 0:
-			beta =  grow_rate* beta
-			gamma = gamma* beta
+		# if i%100 == 0:
+		# 	beta =  grow_rate* beta
+		# 	gamma = gamma* beta
 
-		# if i%20==0:
-		# 	test()
+		if i%20==0:
+			test()
 		i = i + 1
 		if loss < err_tol:
 			break
