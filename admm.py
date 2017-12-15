@@ -1,203 +1,203 @@
 import numpy as np
-from toy_data import generate_toy_data
 from sklearn.datasets import load_digits
-digits = load_digits()
-
-feat_num = 64
-layer_1_units = 10
-layer_2_units = 5
-beta = 10
-gamma = 1
-grow_rate = 5
-warm_start = 10
-error_total = 0.0001
-
 from numpy import vectorize
 
-#transfer odd to -1, even is 1
-def convert_binary(m,n):
-	digit = load_digits()
-	targets = digit.target[m:n]
-	for i in range(n - m):
-		if (targets[i] % 2) == 0: #convert the target into 1 & -1
-			targets[i] = 1
-		else:
-			targets[i] = -1
-	return targets
+class ADMM:
+    def __init__(self):
+        #load the MNIST data
+        self.digits = load_digits()
+        self.feat_num = 64
+        self.layer_1_units = 10
+        self.layer_2_units = 5
+        self.beta = 10
+        self.gamma = 1
+        self.grow_rate = 5
+        self.warm_start = 10
+        self.err_tol = 0.0001
+        #data loader, train data and test data
+        self.train_data_x = np.transpose(self.digits.data[:1000])
+        self.train_data_y = self.convert_binary(0, 1000)
+        self.test_data_x = np.transpose(self.digits.data[:1000])
+        self.test_data_y = self.convert_binary(0, 1000)
+        #related variables
+        print("Outputs are ", self.train_data_x)
+        self.data_num = self.train_data_y.size
+        print(self.train_data_x.shape)
+        self.a_0 = self.train_data_x
+        self.a_0_pinv = np.linalg.pinv(self.a_0)
+        self.W_1 = np.zeros((self.layer_1_units, self.feat_num))
+        self.init_var = 1
+        self.z_1 = self.init_var * np.random.randn(self.layer_1_units, self.data_num)  # initialize the weights
+        self.a_1 = self.init_var * np.random.randn(self.layer_1_units, self.data_num)
 
-train_data_x = np.transpose(digits.data[:1000])
-train_data_y = convert_binary(0,1000)
-test_data_x = np.transpose(digits.data[:1000])
-test_data_y = convert_binary(0, 1000)
+        self.W_2 = np.zeros((self.layer_2_units, self.layer_1_units))
+        self.z_2 = self.init_var * np.random.randn(self.layer_2_units, self.data_num)
+        self.a_2 = self.init_var * np.random.randn(self.layer_1_units, self.data_num)
 
-#train_data_x, train_data_y,test_data_x, test_data_y = generate_toy_data()
-print("Outputs are ", train_data_x)
-data_num = train_data_y.size
-print(train_data_x.shape)
-a_0 = train_data_x
-a_0_pinv = np.linalg.pinv(a_0)
-W_1 = np.zeros((layer_1_units,feat_num))
-init_var = 1
-z_1 = init_var * np.random.randn(layer_1_units,data_num) #initialize the weights
-a_1 = init_var * np.random.randn(layer_1_units,data_num)
+        self.W_3 = np.zeros((1, self.layer_2_units))
+        self.z_3 = self.init_var * np.random.randn(1, self.data_num)
 
-W_2 = np.zeros((layer_2_units,layer_1_units))
-z_2 = init_var * np.random.randn(layer_2_units,data_num)
-a_2 = init_var * np.random.randn(layer_1_units,data_num)
+        self._lambda = np.zeros((1, self.data_num))
+        #--------------------------------
+        self.vactivation = vectorize(self.activation)
+        self.vget_z_l = vectorize(self.get_z_l)
+        self.vget_z_L = vectorize(self.get_z_L)
+        self.vget_predict = vectorize(self.get_predict)
+        self.vget_loss = vectorize(self.get_loss)
+        #----train and test the deep learning model----------------
+        self.train()
+        self.test()
+    #convert the data into binary classified
+    def convert_binary(self, m, n):
+        digit = load_digits()
+        targets = digit.target[m:n]
+        for i in range(n - m):
+            if (targets[i] % 2) == 0:  # convert the target into 1 & -1
+                targets[i] = 1
+            else:
+                targets[i] = -1
+        return targets
 
-W_3 = np.zeros((1,layer_2_units))
-z_3 = init_var * np.random.randn(1,data_num)
+    def get_z_l(self, a, w_a):
+        def f_z(z):
+            return self.gamma * (a - self.activation(z)) ** 2 + self.beta * (z - w_a) ** 2
 
-_lambda = np.zeros((1,data_num))
-#_lambda = np.random.randn(1,data_num)
+        z1 = max((a * self.gamma + w_a * self.beta) / (self.beta + self.gamma), 0)
+        result1 = f_z(z1)
 
-# Relu activation function
-def activation(i): 
-	if i > 0:
-		return i
-	else:
-		return 0
+        z2 = min(w_a, 0)
+        result2 = f_z(z2)
 
-def get_z_l(a,w_a):
-	def f_z(z):
-		return gamma*(a-activation(z))**2 + beta*(z-w_a)**2
+        if result1 <= result2:
+            return z1
+        else:
+            return z2
 
-	z1 = max((a*gamma+w_a*beta)/(beta+gamma),0)
-	result1 = f_z(z1)
+    def get_z_L(self, y, w_a, _lambda):
+        if y == -1:
+            def f_z(z):
+                return self.beta * z ** 2 - (2 * self.beta * w_a - _lambda) * z + max(1 + z, 0)
 
-	z2 = min(w_a,0)
-	result2 = f_z(z2)
+            z1 = min((2 * self.beta * w_a - _lambda) / (2 * self.beta), -1)
+            z2 = max((2 * self.beta * w_a - _lambda - 1) / (2 * self.beta), -1)
+            if f_z(z1) < f_z(z2):
+                return z1
+            else:
+                return z2
 
-	if result1 <= result2:
-		return z1
-	else:
-		return z2
+        if y == 1:
+            def f_z(z):
+                return self.beta * z ** 2 - (2 * self.beta * w_a - _lambda) * z + max(1 - z, 0)
 
+            z1 = min((2 * self.beta * w_a - _lambda + 1) / (2 * self.beta), 1)
+            z2 = max((2 * self.beta * w_a - _lambda) / (2 * self.beta), 1)
 
+            if f_z(z1) < f_z(z2):
+                return z1
+            else:
+                return z2
 
-def get_z_L(y,w_a,_lambda):
-	if y==-1:
-		def f_z(z):
-			return beta*z**2 - (2*beta*w_a-_lambda)*z + max(1+z,0)
+        else:
+            print("error class: {}".format(y))
+            exit()
+    # Relu activation function
+    def activation(self, i):  # Relu activation function
+        if i > 0:
+            return i
+        else:
+            return 0
 
-		z1 = min((2*beta*w_a - _lambda)/(2*beta),-1)
-		z2 = max((2*beta*w_a-_lambda-1)/(2*beta),-1)
-		if f_z(z1) < f_z(z2):
-			return z1
-		else:
-			return z2
+    def get_predict(self,pre):
+        if pre >= 0:
+            return 1
+        else:
+            return -1
 
-	if y==1:
-		def f_z(z):
-			return beta*z**2 - (2*beta*w_a - _lambda)*z + max(1-z,0)
-		z1 = min((2*beta*w_a - _lambda+1)/(2*beta),1)
-		z2 = max((2*beta*w_a - _lambda)/(2*beta),1)
+    def get_loss(self,pre, gt):
+        if gt == -1:
+            return max(1 + pre, 0)
+        elif gt == 1:
+            return max(1 - pre, 0)
+        else:
+            print("invalid gt..")
+            exit()
+    # back propagation
+    def update(self, is_warm_start=False):
+        #global z_1, z_2, z_3, _lambda, W_1, W_2, W_3
+        # update layer 1
+        old_W_1 = self.W_1
+        old_z_1 = self.z_1
+        self.W_1 = np.dot(self.z_1, self.a_0_pinv)
+        a_1_left = np.linalg.inv((self.beta * np.dot(np.transpose(self.W_2), self.W_2) + self.gamma * np.eye(self.layer_1_units, dtype=float)))
+        a_1_right = (self.beta * np.dot(np.transpose(self.W_2), self.z_2) + self.gamma * self.vactivation(self.z_1))
+        self.a_1 = np.dot(a_1_left, a_1_right)
+        self.z_1 = self.vget_z_l(self.a_1, np.dot(self.W_1, self.a_0))
 
-		if f_z(z1) < f_z(z2):
-			return z1
-		else:
-			return z2
+        # update layer 2
+        self.W_2 = np.dot(self.z_2, np.linalg.pinv(self.a_1))
+        # numpy.linalg.linalg.LinAlgError: Singular matrix
+        a_2_left = np.linalg.inv((self.beta * np.dot(np.transpose(self.W_3), self.W_3) + self.gamma * np.eye(self.layer_2_units, dtype=float)))
+        a_2_right = (self.beta * np.dot(np.transpose(self.W_3), self.z_3) + self.gamma * self.vactivation(self.z_2))
+        self.a_2 = np.dot(a_2_left, a_2_right)
+        self.z_2 = self.vget_z_l(self.a_2, np.dot(self.W_2, self.a_1))
 
-	else:
-		print("error class: {}".format(y))
-		exit()
+        # update last layer
+        self.W_3 = np.dot(self.z_3, np.linalg.pinv(self.a_2))
+        self.z_3 = self.vget_z_L(self.train_data_y, np.dot(self.W_3, self.a_2), self._lambda)
 
-
-def get_predict(pre):
-	if pre >= 0:
-		return 1
-	else:
-		return -1
-
-def get_loss(pre,gt):
-	if gt==-1:
-		return max(1+pre,0)
-	elif gt==1:
-		return max(1-pre,0)
-	else:
-		print("invalid gt..")
-		exit()
-
-
-vactivation = vectorize(activation)
-vget_z_l = vectorize(get_z_l)
-vget_z_L = vectorize(get_z_L)
-vget_predict = vectorize(get_predict)
-vget_loss = vectorize(get_loss)
-
-def update(is_warm_start = False):
-	global  z_1,z_2,z_3,_lambda,W_1,W_2,W_3
-	# update layer 1
-	old_W_1 = W_1
-	old_z_1 =z_1
-	W_1 = np.dot(z_1, a_0_pinv)
-	a_1_left = np.linalg.inv((beta * np.dot(np.transpose(W_2), W_2) + gamma * np.eye(layer_1_units, dtype=float)))
-	a_1_right = (beta * np.dot(np.transpose(W_2), z_2) + gamma * vactivation(z_1))
-	a_1 = np.dot(a_1_left,a_1_right)
-	z_1 = vget_z_l(a_1, np.dot(W_1, a_0))
-
-	# update layer 2
-	W_2 = np.dot(z_2, np.linalg.pinv(a_1))
-	#numpy.linalg.linalg.LinAlgError: Singular matrix
-	a_2_left = np.linalg.inv((beta * np.dot(np.transpose(W_3), W_3) + gamma * np.eye(layer_2_units, dtype=float)))
-	a_2_right = (beta * np.dot(np.transpose(W_3), z_3) + gamma * vactivation(z_2))
-	a_2 = np.dot(a_2_left , a_2_right)
-	z_2 = vget_z_l(a_2, np.dot(W_2, a_1))
-
-	# update last layer
-	W_3 = np.dot(z_3, np.linalg.pinv(a_2))
-	z_3 = vget_z_L(train_data_y, np.dot(W_3, a_2),_lambda)
-
-	loss = vget_loss(z_3,train_data_y)
-	#print("loss: {}".format(loss))
-
-
-	if not is_warm_start:
-		_lambda = _lambda + beta * (z_3 - np.dot(W_3,a_2))
-
-	#ret = np.linalg.norm(z_3 - np.dot(W_3,a_2),2)
-	#ret = np.linalg.norm(old_W_1-W_1,2)
-	ret = np.linalg.norm(old_z_1 - z_1, 2)
-	return ret
-
-def test():
-	a_0 = test_data_x
-	layer_1_output = vactivation(np.dot(W_1,a_0))
-	layer_2_output = vactivation(np.dot(W_2,layer_1_output))
-	predict = np.dot(W_3,layer_2_output)
-	pre = vget_predict(predict)
-
-	print("layer 1 value: \n")
-	print(layer_1_output)
-	print("layer 2 value: \n")
-	print(layer_2_output)
-	print("layer 3 value: \n")
-	print(predict)
-	hit = np.equal(pre,test_data_y)
-	acc = np.sum(hit)/1000
-	print("test data predict accuracy: {}".format(acc))
-
-def train():
-	global  beta,gamma
-	#warm start
-	for i in range(warm_start):
-		loss = update(is_warm_start=True)
-		print("warm start, err :{}".format(loss))
-	#real start
-	i = 1
-	while 1:
-		loss = update(is_warm_start=False)
-		print("iteration {}, err :{}".format(i,loss))
-		
-		if i%20==0:
-			test()
-		i = i + 1
-		if loss < error_total:
-			break
+        # print("z_3: ")
+        # print(z_3)
+        loss = self.vget_loss(self.z_3, self.train_data_y)
+        # print("loss: {}".format(loss))
+        # print("lambda: ")
+        # print(_lambda)
 
 
+        if not is_warm_start:
+            self._lambda = self._lambda + self.beta * (self.z_3 - np.dot(self.W_3, self.a_2))
+
+        # ret = np.linalg.norm(z_3 - np.dot(W_3,a_2),2)
+        # ret = np.linalg.norm(old_W_1-W_1,2)
+        ret = np.linalg.norm(old_z_1 - self.z_1, 2)
+        return ret
+
+    def test(self):
+        a_0 = self.test_data_x
+        layer_1_output = self.vactivation(np.dot(self.W_1, a_0))
+        layer_2_output = self.vactivation(np.dot(self.W_2, layer_1_output))
+        predict = np.dot(self.W_3, layer_2_output)
+        pre = self.vget_predict(predict)
+
+        print("layer 1 value: \n")
+        print(layer_1_output)
+        print("layer 2 value: \n")
+        print(layer_2_output)
+        print("layer 3 value: \n")
+        print(predict)
+        hit = np.equal(pre, self.test_data_y)
+        acc = np.sum(hit) / 1000
+        print("test data predict accuracy: {}".format(acc))
+
+    def train(self):
+        global beta, gamma
+        # warm start
+        for i in range(self.warm_start):
+            loss = self.update(is_warm_start=True)
+            print("warm start, err :{}".format(loss))
+        # real start
+        i = 1
+        while 1:
+            loss = self.update(is_warm_start=False)
+            print("iteration {}, err :{}".format(i, loss))
+            # if i%100 == 0:
+            # 	beta =  grow_rate* beta
+            # 	gamma = gamma* beta
+
+            if i % 20 == 0:
+                self.test()
+            i = i + 1
+            if loss < self.err_tol:
+                break
 
 
-
-train()
-test()
+ob = ADMM()
