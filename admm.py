@@ -1,5 +1,5 @@
 import numpy as np
-from toy_data import generate_toy_data
+#from toy_data import generate_toy_data
 from sklearn.datasets import load_digits
 digits = load_digits()
 
