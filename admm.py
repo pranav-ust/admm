@@ -10,7 +10,7 @@ beta = 10
 gamma = 1
 grow_rate = 5
 warm_start = 10
-err_tol = 0.0001
+error_total = 0.0001
 
 from numpy import vectorize
 
@@ -51,7 +51,8 @@ z_3 = init_var * np.random.randn(1,data_num)
 _lambda = np.zeros((1,data_num))
 #_lambda = np.random.randn(1,data_num)
 
-def activation(i): # Relu activation function
+# Relu activation function
+def activation(i): 
 	if i > 0:
 		return i
 	else:
@@ -147,12 +148,8 @@ def update(is_warm_start = False):
 	W_3 = np.dot(z_3, np.linalg.pinv(a_2))
 	z_3 = vget_z_L(train_data_y, np.dot(W_3, a_2),_lambda)
 
-	#print("z_3: ")
-	#print(z_3)
 	loss = vget_loss(z_3,train_data_y)
 	#print("loss: {}".format(loss))
-	#print("lambda: ")
-	#print(_lambda)
 
 
 	if not is_warm_start:
@@ -191,14 +188,11 @@ def train():
 	while 1:
 		loss = update(is_warm_start=False)
 		print("iteration {}, err :{}".format(i,loss))
-		# if i%100 == 0:
-		# 	beta =  grow_rate* beta
-		# 	gamma = gamma* beta
-
+		
 		if i%20==0:
 			test()
 		i = i + 1
-		if loss < err_tol:
+		if loss < error_total:
 			break
 
 
