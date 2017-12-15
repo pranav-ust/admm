@@ -14,6 +14,7 @@ err_tol = 0.0001
 
 from numpy import vectorize
 
+#transfer odd to -1, even is 1
 def convert_binary(m,n):
 	digit = load_digits()
 	targets = digit.target[m:n]
