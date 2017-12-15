@@ -1,6 +1,9 @@
 import numpy as np
 from toy_data import generate_toy_data
-feat_num = 2
+from sklearn.datasets import load_digits
+digits = load_digits()
+
+feat_num = 64
 layer_1_units = 10
 layer_2_units = 5
 beta = 10
@@ -11,9 +14,24 @@ err_tol = 1e-8
 
 from numpy import vectorize
 
-train_data_x, train_data_y,test_data_x, test_data_y = generate_toy_data()
+def convert_binary():
+	targets = digits.data[:1000]
+	for i in range(1000):
+		if targets[i] % 2 == 0:
+			targets[i] = 1
+		else:
+			targets[i] = -1
+	return targets
+
+train_data_x = np.transpose(digits.data[1:4])
+train_data_y = np.array([-1, 1, -1])
+test_data_x = np.transpose(digits.data[:3])
+test_data_y = np.array([-1, 1, -1])
+
+#train_data_x, train_data_y,test_data_x, test_data_y = generate_toy_data()
+print(train_data_y)
 data_num = train_data_y.size
-print(train_data_x)
+print(train_data_x.shape)
 a_0 = train_data_x
 a_0_pinv = np.linalg.pinv(a_0)
 W_1 = np.zeros((layer_1_units,feat_num))
@@ -177,8 +195,8 @@ def train():
 			beta =  grow_rate* beta
 			gamma = gamma* beta
 
-		if i%20==0:
-			test()
+		# if i%20==0:
+		# 	test()
 		i = i + 1
 		if loss < err_tol:
 			break
