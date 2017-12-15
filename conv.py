@@ -8,9 +8,9 @@ a = digits.data[0].reshape((8,8))
 k = np.array([[1,2],[3,4]])
 
 
-y = signal.convolve2d(a, np.rot90(k, 2), 'valid')
+y = signal.convolve2d(a, np.rot90(k, 2), 'valid')# flip image 
 def convert_conv(im, k):
-	'''x, is the input image, k is the kernel size'''
+	#x, is the input image, k is the kernel size
 	y, x = im.shape
 	toeplitz = np.zeros(((y - k + 1) * (y - k + 1), k * k))
 	y_ = y - k + 1
