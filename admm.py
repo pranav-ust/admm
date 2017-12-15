@@ -18,7 +18,7 @@ def convert_binary(m,n):
 	digit = load_digits()
 	targets = digit.target[m:n]
 	for i in range(n - m):
-		if (targets[i] % 2) == 0:
+		if (targets[i] % 2) == 0: #convert the target into 1 & -1
 			targets[i] = 1
 		else:
 			targets[i] = -1
@@ -37,7 +37,7 @@ a_0 = train_data_x
 a_0_pinv = np.linalg.pinv(a_0)
 W_1 = np.zeros((layer_1_units,feat_num))
 init_var = 1
-z_1 = init_var * np.random.randn(layer_1_units,data_num)
+z_1 = init_var * np.random.randn(layer_1_units,data_num) #initialize the weights
 a_1 = init_var * np.random.randn(layer_1_units,data_num)
 
 W_2 = np.zeros((layer_2_units,layer_1_units))
@@ -50,7 +50,7 @@ z_3 = init_var * np.random.randn(1,data_num)
 _lambda = np.zeros((1,data_num))
 #_lambda = np.random.randn(1,data_num)
 
-def activation(i):
+def activation(i): # Relu activation function
 	if i > 0:
 		return i
 	else:
