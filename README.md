@@ -1,6 +1,15 @@
-# admm   
-1. Implement the optimization method in the paper.       
-2. Include the convolution, pooling, and ReLU layers.      
-3. Compare with the standard backpropagation method on some benchmark image datasets.      
-4. Write a report to describe the details of your implementation and the comparison results.      
-The report and source codes should be put in github.
+# Implementation of ADMM for neural networks
+
+* In this project we have implemented ADMM optimization methods for the convolution layers.
+
+* For the convolution layers, we considered converting a convoluted matrix into a dense toeplitz matrix.
+
+* The weights updates of kernels are done by solving a system of equations by sampling equations obtained from Toeplitz matrix.
+
+* We found that our method worked faster than author's implementation since they only considered the pseudoinverse of the matrix.
+
+* We used MNIST digit dataset (odd-even classification) and found that our method gives 89.6% over traditional backprop method 79.6%.
+
+Code is [here](https://github.com/pranav-ust/admm/blob/master/admm.py).
+
+Report is [here](https://github.com/pranav-ust/admm/blob/master/report/report.pdf).

@@ -8,7 +8,7 @@
 
 \documentclass[12pt]{article}
 \usepackage{graphicx}
-\usepackage{booktabs}
+\usepackage{booktabs,amsmath}
 \usepackage{cite}
 \begin{document}
 \maketitle
@@ -18,21 +18,96 @@ In this project we have implemented ADMM optimization methods for the convolutio
 For the convolution layers, we considered converting a convoluted matrix into a dense toeplitz matrix.
 The weights updates of kernels are done by solving a system of equations by sampling equations obtained from Toeplitz matrix.
 We found that our method worked faster than author's implementation since they only considered the pseudoinverse of the matrix.
-We used MNIST digit dataset (odd-even classification) and found that our method gives 90.6\% over traditional backprop method 79.6\%.
+We used MNIST digit dataset (odd-even classification) and found that our method gives 89.6\% over traditional backprop method 79.6\%.
 \end{abstract}
 
 \section{Introduction}
-ADMM (Alternating Direction Method of Multipliers) is the divide and conquer approach to solve a convex optimization problem.
+ADMM (Alternating Direction Method of Multipliers) is the divide and conquer approach to solve a convex optimization problem \cite{taylor2016training}.
 For this project, we have implemented ADMM for Neural Networks.
 
 \section{Weight Update}
 
 For each layer $l$, the optimal solution would minimize $||z_l - W_l a_{l-1} ||^2$.
 The authors approached this problem by taking the pseudoinverse of $a_{l-1}$, which is $a_{l-1}^*$.
-In our opinion, taking pseudoinverse of a very tall matrix (in this case Toeplitz matrix of $a_{l-1}$) is an overkill and inaccurate.
+In our opinion, taking pseudoinverse of a very tall matrix (in this case Toeplitz matrix \cite{gray2006toeplitz} of $a_{l-1}$) is an overkill and inaccurate.
 Hence, we approach this problem in a different manner.
 
-Firstly, 
+Firstly, we write the convolution-kernel operation in the form of equation matrix, let's say $a_{l-1}W_l  = z_l$.
+where $W_l$ is the unravelled kernel and $a_{l-1}$ is the Toeplitz matrix of the convolution layer.
+Here if $k = rank(W_l)$, then we only choose $k*k$ rows from the augmented $a_{l-1}W_l | z_l$ block and solve them using standard linear equation solvers.
+We found this to be a lot faster than taking traditional pseudoinverse.
+
+\section{Activation Update}
+
+Here we tweaked the original formulation which could work well for the ReLU function.
+\begin{align*}
+	a_l = \begin{cases}
+		(\beta_{l+1} W_{l+1}^TW_{l+1} + \gamma_l I)^{-1}(\beta_{l+1} W_{l+1}^Tz_{l+1} + \gamma_l z_l), & \text{for } z > 0 \\
+		(\beta_{l+1} W_{l+1}^TW_{l+1} + \gamma_l I)^{-1}(\beta_{l+1} W_{l+1}^Tz_{l+1}), & \text{otherwise }
+	\end{cases}
+\end{align*}
+
+\section{Output Update}
+
+For this step, we need to minimize, 
+\begin{align*}
+\min_z \gamma_l || a_l - h_l(z) ||^2 + \beta_l || z - W_la_{l-1} ||^2
+\end{align*}
+
+For the ReLU function, this function would be piecewise linear. Just putting the gradients to zero, we get,
+\begin{align*}
+	\frac{\partial}{\partial z} \left(  \gamma_l || a_l - h_l(z) ||^2 + \beta_l || z - W_la_{l-1} ||^2 \right) = 0
+\end{align*}
+
+which gives,
+
+\begin{align*}
+	z_l = \begin{cases}
+		\frac{\gamma_l a_l + \beta_l w_l a_{l-1}}{\gamma_l + \beta_l}, & \text{for } z > 0 \\
+		w_la_{l-1}, & \text{otherwise }
+	\end{cases}
+\end{align*}
+
+\section{Experimental Setup}
+We used MNIST dataset for classification. 
+However, due to time constraints we resorted to binary classification, rather than multiclass classification.
+Hence, we only classified even against odd numbers classification.
+Although we found that this was harder than numerical classification, since set of pixels were trying to generalize the image, making it even hard to classify.
+
+For vanilla backprop, we did 2-layer implementation of the neural nets.
+
+For the ADMM, we also implemented 2-layer with same hyperparameters as vanilla backprop.
+We used hinge loss as reported in the original paper, $\beta = 10$ and $\gamma = 1$.
+We used no fully connected layers for this purpose.
+We just used 3 convolutional stages, followed by max-pooling then ReLU.
+Here, convolution stands for Toeplitz matrix - kernel matrix multiplication.
+Thus, we avoid the complications of im2col here.
+We also took help from existing implementations of this paper \cite{dongzhuoyao}.
+
+\section{Final Remarks}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table}[h]
+	\centering
+	\label{my-label}
+	\begin{tabular}{@{}lc@{}}
+		\toprule
+		\textbf{}        & \textbf{Testing Accuracy} \\ \midrule
+		Vanilla Backprop & 79.6 \%                   \\
+		ADMM             & \textbf{89.6} \%                   \\ \bottomrule
+	\end{tabular}
+\caption{Tesing Accuracy for the experiments}
+\end{table}
+
+The results of our experiments are reported in Table 1.
+Clearly, ADMM outperforms vanilla backprop method.
+We also feel that our implementation of ADMM is faster than the original solution.
+However, our implementation of ADMM was buggy since we have to re-run it couple of times so that it does not converges on local minima (last layer is all zeros).
+Due to time constraints, we cannot solve that bug otherwise we could empirically show that our method is better.
+
+We feel that ADMM is not appropriate for complex architecture since inverting a large matrix is unreasonable and random initializations are unreliable.
+However, in our implementation we show how this problem could be partially alleviated through sampling into a full-rank matrix.
 
 \bibliographystyle{apalike}
 \bibliography{ref}

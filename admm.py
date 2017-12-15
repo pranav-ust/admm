@@ -72,6 +72,19 @@ class ADMM:
             return z1
         else:
             return z2
+	def convert_conv(im, k):
+		
+		'''Toeplitz matrix conversion'''
+		y, x = im.shape
+		toeplitz = np.zeros(((y - k + 1) * (y - k + 1), k * k))
+		y_ = y - k + 1
+		x_ = x - k + 1
+		count = 0
+		for i in range(y_):
+			for j in range(x_):
+				toeplitz[count, :] = im[i:i+k, j:j+k].reshape((k*k))
+				count += 1
+		return toeplitz
 
     def get_z_L(self, y, w_a, _lambda):
         if y == -1:
@@ -145,19 +158,12 @@ class ADMM:
         self.W_3 = np.dot(self.z_3, np.linalg.pinv(self.a_2))
         self.z_3 = self.vget_z_L(self.train_data_y, np.dot(self.W_3, self.a_2), self._lambda)
 
-        # print("z_3: ")
-        # print(z_3)
         loss = self.vget_loss(self.z_3, self.train_data_y)
-        # print("loss: {}".format(loss))
-        # print("lambda: ")
-        # print(_lambda)
 
 
         if not is_warm_start:
             self._lambda = self._lambda + self.beta * (self.z_3 - np.dot(self.W_3, self.a_2))
 
-        # ret = np.linalg.norm(z_3 - np.dot(W_3,a_2),2)
-        # ret = np.linalg.norm(old_W_1-W_1,2)
         ret = np.linalg.norm(old_z_1 - self.z_1, 2)
         return ret
 
@@ -189,13 +195,7 @@ class ADMM:
         while 1:
             loss = self.update(is_warm_start=False)
             print("iteration {}, err :{}".format(i, loss))
-            # if i%100 == 0:
-            # 	beta =  grow_rate* beta
-            # 	gamma = gamma* beta
-
-            if i % 20 == 0:
-                self.test()
-            i = i + 1
+            i += 1
             if loss < self.err_tol:
                 break
 
