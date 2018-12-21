@@ -1,10 +1,10 @@
 
-\title{Deep Learning Project 3}
+\title{Neural Networks without Backpropagation}
 \author{
-        Group 2\\
+        Pranav A\\
         Hong Kong University of Science and Technology
 }
-\date{\today}
+\date{}
 
 \documentclass[12pt]{article}
 \usepackage{graphicx}
@@ -81,7 +81,7 @@ Although we found that this was harder than numerical classification, since set 
 For vanilla backprop, we did 2-layer implementation of the neural nets.
 
 For the ADMM, we also implemented 2-layer with same hyperparameters as vanilla backprop.
-We used Hinge Loss function as reported in the original paper, $\beta = 10$ and $\gamma = 1$.
+We used hinge loss as reported in the original paper, $\beta = 10$ and $\gamma = 1$.
 We used no fully connected layers for this purpose.
 We just used 3 convolutional stages, followed by max-pooling then ReLU.
 Here, convolution stands for Toeplitz matrix - kernel matrix multiplication.

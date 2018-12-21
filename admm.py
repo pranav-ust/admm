@@ -4,6 +4,7 @@ from numpy import vectorize
 
 class ADMM:
     def __init__(self):
+
         #load the MNIST data
         self.digits = load_digits()
         self.feat_num = 64
@@ -14,15 +15,18 @@ class ADMM:
         self.grow_rate = 5
         self.warm_start = 10
         self.err_tol = 0.0001
+
         #data loader, train data and test data
         self.train_data_x = np.transpose(self.digits.data[:1000])
         self.train_data_y = self.convert_binary(0, 1000)
         self.test_data_x = np.transpose(self.digits.data[:1000])
         self.test_data_y = self.convert_binary(0, 1000)
+
         #related variables
         print("Outputs are ", self.train_data_x)
         self.data_num = self.train_data_y.size
         print(self.train_data_x.shape)
+
         self.a_0 = self.train_data_x
         self.a_0_pinv = np.linalg.pinv(self.a_0)
         self.W_1 = np.zeros((self.layer_1_units, self.feat_num))
@@ -38,15 +42,18 @@ class ADMM:
         self.z_3 = self.init_var * np.random.randn(1, self.data_num)
 
         self._lambda = np.zeros((1, self.data_num))
+
         #--------------------------------
         self.vactivation = vectorize(self.activation)
         self.vget_z_l = vectorize(self.get_z_l)
         self.vget_z_L = vectorize(self.get_z_L)
         self.vget_predict = vectorize(self.get_predict)
         self.vget_loss = vectorize(self.get_loss)
+
         #----train and test the deep learning model----------------
         self.train()
         self.test()
+
     #convert the data into binary classified
     def convert_binary(self, m, n):
         digit = load_digits()
@@ -72,19 +79,20 @@ class ADMM:
             return z1
         else:
             return z2
+	
+
 	def convert_conv(im, k):
-		
-		'''Toeplitz matrix conversion'''
-		y, x = im.shape
-		toeplitz = np.zeros(((y - k + 1) * (y - k + 1), k * k))
-		y_ = y - k + 1
-		x_ = x - k + 1
-		count = 0
-		for i in range(y_):
-			for j in range(x_):
-				toeplitz[count, :] = im[i:i+k, j:j+k].reshape((k*k))
-				count += 1
-		return toeplitz
+			'''Toeplitz matrix conversion'''
+			y, x = im.shape
+			toeplitz = np.zeros(((y - k + 1) * (y - k + 1), k * k))	
+			y_ = y - k + 1
+			x_ = x - k + 1
+			count = 0
+			for i in range(y_):
+				for j in range(x_):
+					toeplitz[count, :] = im[i:i+k, j:j+k].reshape((k*k))
+					count += 1
+			return toeplitz
 
     def get_z_L(self, y, w_a, _lambda):
         if y == -1:
@@ -113,8 +121,9 @@ class ADMM:
         else:
             print("error class: {}".format(y))
             exit()
-    # Relu activation function
-    def activation(self, i):  # Relu activation function
+    
+	# Relu activation function
+    def activation(self, i): 
         if i > 0:
             return i
         else:
@@ -134,7 +143,8 @@ class ADMM:
         else:
             print("invalid gt..")
             exit()
-    # back propagation
+    
+	# back propagation
     def update(self, is_warm_start=False):
         #global z_1, z_2, z_3, _lambda, W_1, W_2, W_3
         # update layer 1
